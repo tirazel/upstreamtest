@@ -190,12 +190,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     }
 
     foreach ($gids as $entity_type => $gid_x_entity) {
-      if ($entity_type !== NULL) {
-        $og_group_entities[$entity_type] = @entity_load($entity_type, $gid_x_entity);
-      }
-      else {
-        watchdog("ldap_authorization_og", "Entity type of 'NULL' found while populating consumers.", WATCHDOG_ERROR);
-      }
+      $og_group_entities[$entity_type] = @entity_load($entity_type, $gid_x_entity);
     }
 
     foreach ($consumers as $consumer_id => $consumer) {

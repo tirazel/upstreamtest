@@ -102,23 +102,18 @@ function rave_alerts_remote_data() {
   $data = NULL;
   if (variable_get('rave_alerts_check_enable', 0)) {
     $url = variable_get('rave_alerts_rss_url', 'https://www.getrave.com/rss/DemoUniversityAlert/channel8');
-
-    $cache = cache_get('rave_alert', 'cache_rave_alerts');
-    if ($cache && $cache->expire > time()) {
+    if ($cache = cache_get('rave_alert', 'cache_rave_alerts')) {
       $data = $cache->data;
-    }
-    else {
+    } else {
       $response = drupal_http_request($url, array('timeout' => 15));
-
       if ($response->code == '200') {
+
         // Check to see if the response is XML
         $is_xml = simplexml_load_string($response->data);
-
-        if ($is_xml===FALSE) {
+        if($is_xml===FALSE) {
           $watchdog_message = 'Alerts xml is not valid: ' . $url;
           watchdog('rave_alerts', $watchdog_message, array(), WATCHDOG_NOTICE, NULL);
-        }
-        else {
+        } else {
           // Create new XMLElement
           $data = new SimpleXMLElement($response->data);
 
@@ -127,49 +122,24 @@ function rave_alerts_remote_data() {
           $data = json_decode($data, true);
           //@TODO: Make the cache timeout configurable
           cache_set('rave_alert', $data, 'cache_rave_alerts', time() + 60);
-
           // There is a new RSS item.  Evaluate the description for triggers.
+          // assume we are going to display this
+          variable_set('rave_alerts_display', 1);
           variable_set('rave_alerts_pubdate', $data['channel']['item']['pubDate']);
 
-          $isCLEAR = strpos($data['channel']['item']['title'], variable_get('rave_alerts_clear_text', '[CLEAR]'));
-          $isACTIVE = strpos($data['channel']['item']['title'], variable_get('rave_alerts_active_text', '[ACTIVE]'));
-
-          // Two variables in the database are checked for expected functionality:
-            // 1. 'rave_alerts_display': checked to decide if alert is shown on page load.
-            // 2. 'rave_alerts_active_event': checked by rave_alerts.js to decide if alert continues to be shown.
-          // The PHP function strpos() can return int 0, which might be evalauted as falsey.
-          // We check for FALSE to avoid this.
-          if ($isCLEAR !== FALSE) {
-            variable_set('rave_alerts_active_event', 0);
-            variable_set('rave_alerts_display', 0);
-            // watchdog('rave_alerts', 'CLEAR token found. Clearing rave alert.');
+          if (strpos($data['channel']['item']['title'], variable_get('rave_alerts_active_text', '[ACTIVE]'))) {
+             variable_set('rave_alerts_active_event', 1);
+             watchdog('rave_alerts', 'ACTIVE token found');
           }
 
-          if ($isACTIVE !== FALSE) {
-            variable_set('rave_alerts_active_event', 1);
-            // watchdog('rave_alerts', 'ACTIVE token found');
-          }
-
-          // This is an active event. We have an alert message that has not been cleared yet.
-          if ($isCLEAR === FALSE) {
-            variable_set('rave_alerts_display', 1);
-            // $logMessageData = [
-            //   'title' => $data['channel']['item']['title'],
-            //   'description' => $data['channel']['item']['description']
-            // ];
-            // watchdog('rave_alerts', 'New Rave RSS item -> @title: @description', $logMessageData);
+          if (strpos($data['channel']['item']['title'], variable_get('rave_alerts_clear_text', '[CLEAR]')) !== FALSE) {
+             variable_set('rave_alerts_active_event', 0);
+             variable_set('rave_alerts_display', 0);
           }
         }
         // @TODO: Add option to leave all clear message up for X hours
       }
-      // If response code != 200
-      else {
-        $logMessage = "Bad Request: {$response->code} - {$response->error}. Request URL: {$response->url}";
-        watchdog('rave_alerts', $logMessage);
-
-        // Return the old cached alert data in this case.
-        $data = $cache->data;
-      }
+      //@TODO: Add code to handle network failure
     }
   }
   return $data;

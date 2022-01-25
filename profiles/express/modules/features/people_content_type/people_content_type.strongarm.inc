@@ -180,6 +180,9 @@ function people_content_type_strongarm() {
         'metatags' => array(
           'weight' => '40',
         ),
+        'xmlsitemap' => array(
+          'weight' => '30',
+        ),
       ),
       'display' => array(
         'people_list_entity_view_1' => array(
