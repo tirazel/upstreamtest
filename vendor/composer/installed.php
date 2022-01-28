@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '890939e6dc5322ff3fd5fcd0a79edb10ef9a92a3',
+        'reference' => '9a7a1b8b45045f927fb221afbc883ee958c945a7',
         'name' => 'tirazel/upstreamtest',
         'dev' => true,
     ),
@@ -694,7 +694,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '890939e6dc5322ff3fd5fcd0a79edb10ef9a92a3',
+            'reference' => '9a7a1b8b45045f927fb221afbc883ee958c945a7',
             'dev_requirement' => false,
         ),
         'twig/extensions' => array(
