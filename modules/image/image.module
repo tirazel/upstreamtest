@@ -546,6 +546,11 @@ function image_field_update_instance($instance, $prior_instance) {
  *   The Drupal file path to the original image.
  */
 function image_path_flush($path) {
+  // Pantheon optimization: one bulk operation is better.
+  if (function_exists('pantheon_api_image_path_flush') && function_exists('pantheon_bulk_file_delete')) {
+    pantheon_api_image_path_flush($path);
+    return;
+  }
   $styles = image_styles();
   foreach ($styles as $style) {
     $image_path = image_style_path($style['name'], $path);
@@ -804,7 +809,7 @@ function image_style_options($include_empty = TRUE, $output = CHECK_PLAIN) {
  * @param $scheme
  *   The file scheme, for example 'public' for public files.
  */
-function image_style_deliver($style, $scheme = NULL) {
+function image_style_deliver($style, $scheme) {
   $args = func_get_args();
   array_shift($args);
   array_shift($args);
@@ -817,7 +822,7 @@ function image_style_deliver($style, $scheme = NULL) {
   // site's vulnerability to denial-of-service attacks. To prevent this
   // variable from leaving the site vulnerable to the most serious attacks, a
   // token is always required when a derivative of a derivative is requested.)
-  $valid = !empty($style) && !empty($scheme) && file_stream_wrapper_valid_scheme($scheme);
+  $valid = !empty($style) && file_stream_wrapper_valid_scheme($scheme);
   if (!variable_get('image_allow_insecure_derivatives', FALSE) || strpos(ltrim($target, '\/'), 'styles/') === 0) {
     $valid = $valid && isset($_GET[IMAGE_DERIVATIVE_TOKEN]) && $_GET[IMAGE_DERIVATIVE_TOKEN] === image_style_path_token($style['name'], $scheme . '://' . $target);
   }
