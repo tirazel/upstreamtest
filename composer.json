@@ -1,0 +1,6 @@
+{
+    "name": "tirazel/upstreamtest",
+    "require": {
+        "simplesamlphp/simplesamlphp": "^1.19"
+    }
+}
